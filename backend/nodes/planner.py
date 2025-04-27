@@ -1,3 +1,9 @@
+"""
+    PlannerNode turns the latest user message into a structured outline for the drafter node
+    and creates 3 or less Tavily search queries for the search node.
+"""
+
+# planner.py
 import logging, textwrap
 from typing import Any, Dict, List
 
@@ -19,12 +25,16 @@ class _Out(BaseModel):
 
 # ---------- planner node ----------
 class PlannerNode(BaseNode):
+    
+    # init node and log graph transitions
     def __init__(self, llm: AsyncOpenAI):
         super().__init__("planner")
         self.llm = llm
         self.cfg = LLMConfig.PLANNER
 
+    # LangGraph entrypoint
     async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
+
         # validate user message 
         try:
             last_msg = state["messages"][-1]
@@ -41,7 +51,7 @@ class PlannerNode(BaseNode):
             raise ValueError("PlannerNode: user problem text is empty")
 
         # messages for the LLM
-        system_prompt = self.cfg.prompt          # template already fixed
+        system_prompt = self.cfg.prompt
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user",   "content": user_problem},

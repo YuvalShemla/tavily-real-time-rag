@@ -1,3 +1,9 @@
+""" 
+    Drafter node — converts the outline and problem text into an initial draft  
+    and returns the result to the initial_content in the graph state.
+"""
+
+# drafter.py
 import logging, textwrap
 from typing import Any, Dict
 
@@ -10,17 +16,20 @@ from ..llm_configs import LLMConfig
 
 _log = logging.getLogger("backend.nodes.drafter")
 
-
+# structure of the llm reply 
 class _Code(BaseModel):
     content: str = Field(...)
 
-
+# ---------- Drafter node ----------
 class DrafterNode(BaseNode):
+    
+    # init node and log graph transitions
     def __init__(self, llm: AsyncOpenAI):
         super().__init__("drafter")
         self.llm = llm
         self.cfg = LLMConfig.DRAFTER
 
+    # LangGraph entrypoint
     async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
         # get context from state 
         user_problem = state["messages"][0].content.strip()
@@ -48,6 +57,6 @@ class DrafterNode(BaseNode):
 
         # update state 
         return {
-            "initial_code": {"content": code.content, "chunk_ids": None},
+            "initial_content": {"content": code.content, "chunk_ids": None},
             "messages":     [AIMessage(content=code.content)],
         }

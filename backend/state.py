@@ -28,7 +28,7 @@ class RawDoc(TypedDict):
     embedding: NotRequired[List[float]]          # the vector you sent/received
     similarity_score: NotRequired[float | None]  # cosine vs. draft
 
-class InitialCode(TypedDict):
+class InitialContent(TypedDict):
     content: str
     chunk_ids: List[str] | None
     signature_text: NotRequired[str]             # draft’s import-signature
@@ -59,8 +59,9 @@ class State(TypedDict):
     raw_docs:    NotRequired[List[RawDoc]]
 
     # code generation
-    initial_code:  NotRequired[InitialCode]
+    initial_content:  NotRequired[InitialContent]
     final_content: NotRequired[FinalCode]
 
     # workflow meta
-    status: str
+    follow_up_response: NotRequired[str]   # 
+    status:                str            # "new" | "continue" | "done"

@@ -1,8 +1,9 @@
-"""
-Search node — runs Tavily queries concurrently and returns a flat list.
-Captures: title, url, content (short description), score (relevance).
+""" 
+    SearchNode: runs Tavily queries and returns a list of the results.
+    results dict include: title, url, content, score (relevance).
 """
 
+# search.py
 from __future__ import annotations
 import asyncio, logging
 from typing import Any, Dict, List
@@ -16,8 +17,8 @@ from ..state     import SearchDoc
 _log = logging.getLogger("backend.nodes.search")
 
 
-#search result structure
-class _TDoc(BaseModel):
+#single tavily search result structure
+class TavilyDoc(BaseModel):
     title:   str | None = None
     url:     str
     content: str | None = None
@@ -25,20 +26,22 @@ class _TDoc(BaseModel):
 
     model_config = dict(extra="ignore")
 
-
-class _TResp(BaseModel):
-    results: List[_TDoc]
+# node response structure
+class TavilyResp(BaseModel):
+    results: List[TavilyDoc]
 
 
 # ---------- search node  ----------
 class SearchNode(BaseNode):
-    """Runs Tavily search queries in parallel and stores List[SearchDoc]."""
 
+    # init node and log graph transitions
     def __init__(self, client: TavilyClient):
         super().__init__("search")
         self.client = client
 
+    # executes a single tavily search call
     async def _run_one(self, query: str) -> List[SearchDoc]:
+
         _log.info("Tavily query: %s", query)
         try:
             raw: Dict[str, Any] = await asyncio.to_thread(
@@ -48,7 +51,7 @@ class SearchNode(BaseNode):
                 max_results=6,
                 include_domains=["github.com"],
             )
-            parsed = _TResp.model_validate(raw)
+            parsed = TavilyResp.model_validate(raw)
 
         except (ValidationError, Exception) as exc:
             _log.error("Tavily error for %r: %s", query, exc)
@@ -64,14 +67,17 @@ class SearchNode(BaseNode):
             for d in parsed.results
         ]
 
+    # LangGraph entrypoint
     async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
         queries: List[str] = state.get("search_queries", [])
         if not queries:
             _log.warning("SearchNode: no queries.")
             return {}
 
+        # run tavily queries in parallel
         nested = await asyncio.gather(*[self._run_one(q) for q in queries])
         docs: List[SearchDoc] = [doc for sub in nested for doc in sub]
-
+        
+        # log and update state
         _log.info("SearchNode: gathered %d docs from %d queries", len(docs), len(queries))
         return {"search_docs": docs}

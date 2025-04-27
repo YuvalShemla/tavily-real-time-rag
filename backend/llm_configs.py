@@ -98,6 +98,18 @@ Rules
         ),
     )
 
+    FOLLOW_UP = LLMParams(
+        prompt=(
+            "You are an agent routing user requests.\n"
+            "If the user expresses no additional need, reply with JSON:\n"
+            '{"status": "done", "goodbye": "<short farewell and goodluck>"}\n'
+            "Else rewrite the follow-up into a concise programming problem:\n"
+            '{"status": "continue", "problem": "<rewritten>"}'
+            "Return **only** the JSON block below: no Markdown, no fences, no commentary."
+        ),
+        model="gpt-4o",
+        temperature=0.2,
+    )
     # Add others as you need:
     # SOLVER  = LLMParams(model="gpt-4o-mini", temperature=0.0, prompt=...)
     # REVIEW  = ...

@@ -1,9 +1,9 @@
 """
-Filter node — uses an LLM to choose up to three URLs worth crawling.
-The URLs are placed directly in state['crawl_urls']; no attempt is made
-to match them against Tavily results.
+    Filter node: chooses up to three URLs worth crawling.
+    The URLs are placed directly in state['crawl_urls']; 
 """
 
+# filter.py
 from __future__ import annotations
 import logging, textwrap
 from string import Template
@@ -25,7 +25,7 @@ class _Out(BaseModel):
     selected_urls: List[str] = Field(min_items=1, max_items=3)
 
 
-# ─────────────── filter node  ───────────────
+# -------------- filter node  ----------------
 class FilterNode(BaseNode):
     def __init__(self, llm: AsyncOpenAI):
         super().__init__("filter")

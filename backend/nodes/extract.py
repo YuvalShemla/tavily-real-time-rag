@@ -1,7 +1,7 @@
 """
-Extract node — picks unique GitHub files, converts /blob/→/raw/,
-calls Tavily /extract concurrently (≤20 URLs per batch),
-and returns List[RawDoc] with keys {url, content}.
+    Extract node — picks unique GitHub files, converts /blob/→/raw/,
+    calls Tavily /extract concurrently (≤20 URLs per batch),
+    and returns List[RawDoc] with keys {url, content}.
 """
 
 from __future__ import annotations
@@ -16,30 +16,32 @@ from ..state     import CrawlDoc, RawDoc
 _log = logging.getLogger("backend.nodes.extract")
 
 
-# ───────── helpers ─────────
+# a few short helpers
 def blob_to_raw(url: str) -> str:
+    """converts GitHub blob URL to raw URL."""
     return url.replace("/blob/", "/raw/", 1) if "/blob/" in url else url
 
-
 def raw_to_blob(url: str) -> str:
+    """converts GitHub raw URL to blob URL."""
     return url.replace("/raw/", "/blob/", 1) if "/raw/" in url else url
 
-
 def filename(url: str) -> str | None:
+    """extracts the filename from a GitHub URL."""
     name = PurePosixPath(url).name
     return name if "." in name else None
 
 
-# ───────── node ─────────
+# --------- Extract Node ---------
 class ExtractNode(BaseNode):
-    BATCH_SIZE = 20                # Tavily allows ≤20 per request
+    BATCH_SIZE = 20                # tavily extract requires  ≤20 per request
     PARAMS     = dict(extract_depth="advanced")
 
+    # init node and log graph transitions 
     def __init__(self, client: TavilyClient):
         super().__init__("extract")
         self.client = client
 
-    # ---- single blocking call ----
+    # executes a single extract call 
     def _extract_sync(self, urls: List[str]) -> Tuple[List[RawDoc], List[Dict[str, str]]]:
         raw_docs: List[RawDoc] = []
         failed:   List[Dict[str, str]] = []
@@ -57,20 +59,22 @@ class ExtractNode(BaseNode):
 
         failed.extend(resp.get("failed_results", []))
         return raw_docs, failed
-
+    
+    # executes a batch of tavily extract calls
     async def _extract_batch(self, urls: List[str]) -> Tuple[List[RawDoc], List[Dict[str, str]]]:
         return await asyncio.to_thread(self._extract_sync, urls)
 
-    # ---- LangGraph step ----
+    # LangGraph entrypoint
     async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
         crawl_docs: List[CrawlDoc] = state.get("crawl_docs", [])
         if not crawl_docs:
             _log.warning("ExtractNode: no crawl_docs provided.")
             return {}
 
+        # keep track of unique filenames and gathers raw URLs to extract
         seen: Set[str] = set()
-        raw_docs: List[RawDoc] = []       # already-have content
-        todo: List[str] = []              # need Tavily extract
+        raw_docs: List[RawDoc] = []  
+        todo: List[str] = []              
 
         # deduplicate by filename
         for doc in crawl_docs:
@@ -88,13 +92,14 @@ class ExtractNode(BaseNode):
         _log.info("ExtractNode: %d URLs already had content, %d queued for extract.",
                   len(raw_docs), len(todo))
 
-        # launch extract in parallel batches
+        # execute extract calls in parallel batches
         tasks = [
             self._extract_batch(todo[i:i + self.BATCH_SIZE])
             for i in range(0, len(todo), self.BATCH_SIZE)
         ]
         batches = await asyncio.gather(*tasks)
 
+        # collect results and log errors
         success = failure = 0
         for docs, fails in batches:
             raw_docs.extend(docs)
@@ -103,5 +108,6 @@ class ExtractNode(BaseNode):
             for f in fails:
                 _log.warning("Extract failed: %s — %s", f.get("url"), f.get("error"))
 
+        # log and update state
         _log.info("ExtractNode: extracted %d/%d URLs successfully.", success, success + failure)
         return {"raw_docs": raw_docs}

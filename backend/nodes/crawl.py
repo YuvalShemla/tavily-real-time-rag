@@ -1,8 +1,9 @@
 """
-Crawler node — calls Tavily /crawl in parallel and stores
-List[CrawlDoc]  where each dict has keys  {url, content}.
+    CrawlerNode — calls Tavily /crawl in parallel and stores
+    List[CrawlDoc]  where each dict has keys  {url, content}.
 """
-# TODO change back params
+
+# crawl.py
 from __future__ import annotations
 import asyncio, logging, os, requests
 from typing import Any, Dict, List
@@ -13,48 +14,50 @@ from ..state     import CrawlDoc
 
 _log = logging.getLogger("backend.nodes.crawler")
 
-# ─────────────────────────────────────────────────────────────────────────────
-#   JSON schema that actually matches the /crawl endpoint today
-# ─────────────────────────────────────────────────────────────────────────────
-class _Page(BaseModel):
+
+# single page result from Tavily Crawl
+class CrawlPage(BaseModel):
     url: str
     raw_content: str | None = None        # full page text
 
-class _CRaw(BaseModel):
-    results: List[_Page]                  # << correct top-level key
+# structure of the CrawlRaw response 
+class CrawlRaw(BaseModel):
+    results: List[CrawlPage]                  # << correct top-level key
     model_config = dict(extra="ignore")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#   Crawler node
-# ─────────────────────────────────────────────────────────────────────────────
+# ------------- crawler node -----------------
 class CrawlNode(BaseNode):
-    endpoint = "https://api.tavily.com/crawl"
-    timeout  = 150                        # seconds
 
-    # Default crawl parameters ------------------------------------------------
+    # init node and log graph transitions
+    def __init__(self, api_key: str | None = None):
+        super().__init__("crawler")
+        self.api_key = api_key or os.getenv("TAVILY_API_KEY")
+        if not self.api_key:
+            raise RuntimeError("TAVILY_API_KEY missing for CrawlerNode")
+        
+    
+    # request parameters
+    endpoint = "https://api.tavily.com/crawl"
+    timeout  = 150 # seconds
+
+    # crawl parameters (improving the parameters would improe the results)
     _payload: Dict[str, Any] = dict(
         limit         = 500,
         max_depth     = 3,
         max_breadth   = 100,
         extract_depth = "advanced",
         allow_external= False,
-        # query = "code"
+        # query = "code" (might help to use a natural language query to get spesific results)
         select_paths  = [
             r"/.*\.ipynb$", r"/.*\.py$", r"/.*\.(js|ts|tsx)$",
             r"/.*\.(cpp|c|cc|h|hpp)$", r"/.*\.(go|rs)$", r"/.*\.java$",
             r"/.*\.(md|rst)$", r"/.*\.(yaml|yml|toml|json)$",
         ],
     )
+ 
 
-    # --------------------------------------------------------------------- #
-    def __init__(self, api_key: str | None = None):
-        super().__init__("crawler")
-        self.api_key = api_key or os.getenv("TAVILY_API_KEY")
-        if not self.api_key:
-            raise RuntimeError("TAVILY_API_KEY missing for CrawlerNode")
-
-    # ---------------- helpers ---------------- #
+    # a single crawl request to tavily
     def _crawl_one_sync(self, base_url: str) -> List[CrawlDoc]:
         """Blocking HTTP call → executed inside a thread."""
         try:
@@ -65,7 +68,7 @@ class CrawlNode(BaseNode):
                 timeout=self.timeout,
             )
             resp.raise_for_status()
-            parsed = _CRaw.model_validate(resp.json())
+            parsed = CrawlRaw.model_validate(resp.json())
 
         except (requests.RequestException, ValidationError) as exc:
             _log.error("Tavily crawl failed for %s → %s", base_url, exc)
@@ -77,19 +80,22 @@ class CrawlNode(BaseNode):
             if page.raw_content                    # skip empty pages
         ]
 
+    # warpper for the sync function
     async def _crawl_one(self, url: str) -> List[CrawlDoc]:
         return await asyncio.to_thread(self._crawl_one_sync, url)
 
-    # -------------- LangGraph entrypoint -------------- #
+    # LangGraph entrypoint 
     async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
         urls: List[str] = state.get("crawl_urls", [])
         if not urls:
             _log.warning("CrawlerNode: no URLs to crawl.")
             return {}
 
+        # run crawl requests in parallel
         nested = await asyncio.gather(*[self._crawl_one(u) for u in urls])
         docs: List[CrawlDoc] = [doc for sub in nested for doc in sub]
 
+        # log and update state
         _log.info("CrawlerNode: gathered %d pages from %d base URLs",
                   len(docs), len(urls))
         return {"crawl_docs": docs}
