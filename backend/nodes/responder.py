@@ -40,32 +40,50 @@ class _Out(BaseModel):
 
 # helper functions
 def _print_run_summary(state: Dict[str, Any]) -> None:
-    """print a quick recap of the latest run."""
-    print("\nRun summary (latest cycle)")
-    # counts
-    print(
-        f"Tavily Search docs:   {len(state.get('search_docs', []))}\n"
-        f"Tavily Crawl docs:    {len(state.get('crawl_docs',  []))}\n"
-        f"Tavily Extract docs: {len(state.get('raw_docs',   []))}"
-    )
+    """print and log a quick recap of the latest run."""
+    lines: list[str] = []
 
-    # output final code
+    # header
+    lines.append("Run summary (latest cycle)")
+
+    # counts
+    search_count = len(state.get("search_docs", []))
+    crawl_count  = len(state.get("crawl_docs",  []))
+    extract_count= len(state.get("raw_docs",   []))
+    lines.append(f"Tavily Search docs:   {search_count}")
+    lines.append(f"Tavily Crawl docs:    {crawl_count}")
+    lines.append(f"Tavily Extract docs:  {extract_count}")
+
+    # final code
     final_code = state.get("final_content", {}).get("content")
     if final_code:
-        print("\n Final Code:\n")
-        print(final_code)
-        print("\n" + "=" * 80 + "\n")
+        lines.append("")  # blank line
+        lines.append("Final Code:")
+        lines.append(final_code)
+        lines.append("=" * 80)
 
-    # list the source docs by similarity
-    raw_docs = [d for d in state.get("raw_docs", []) if d.get("similarity_score") is not None]
+    # similarity‐sorted sources
+    raw_docs = [
+        d for d in state.get("raw_docs", [])
+        if d.get("similarity_score") is not None
+    ]
     raw_docs.sort(key=lambda d: d["similarity_score"], reverse=True)
 
     if raw_docs:
-        print("noRaw documents by similarity:\n")
+        lines.append("")  # blank line
+        lines.append("Raw documents by similarity:")
         for d in raw_docs:
-            print(f"{d['url']}: {d['similarity_score']:.4f}")
+            lines.append(f"{d['url']}: {d['similarity_score']:.4f}")
     else:
-        print("No similarity scored raw docs.")
+        lines.append("")  # blank line
+        lines.append("No similarity scored raw docs.")
+
+    # print to console
+    for line in lines:
+        print(line)
+
+    # log at INFO
+    _log.info("\n".join(lines))
 
 # clean the state before planner
 def _clean_state(state: Dict[str, Any]) -> None:
@@ -140,12 +158,13 @@ class ResponderNode(BaseNode):
         }
 
         _log.info(
-            "\n\n ----- Responder information ----- \n"
-            "Printed results to the user, LLM follow-up status=%s\nLLM response (first 300 chars): %s",
+            "\n\n ----- Responder loop information ----- \n"
+            "Printed results to the user, LLM follow-up status=%s\n",
             payload.status,
-            raw_json[:300] + (" …" if len(raw_json) > 300 else ""),
         )
 
+
+        
         # if we continue, add the problem to the state
         if payload.status == "continue":
             updates["messages"].append(HumanMessage(content=payload.problem.strip()))

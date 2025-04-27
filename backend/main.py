@@ -1,14 +1,12 @@
 """
     Entrypoint — build the LangGraph workflow.
     Prompts the user for a problem at each loop iteration.
-
 """
 
 # main.py
 from __future__ import annotations
-import asyncio, logging, os
+import asyncio
 
-from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
 from openai import AsyncOpenAI
@@ -18,37 +16,13 @@ from .state  import State
 from .nodes  import (PlannerNode, SearchNode, DrafterNode, FilterNode, CrawlNode,
                         ExtractNode, RankerNode, RefinerNode, ResponderNode)
 
-# logging
-# main.py  – excerpts only
-from pathlib import Path                           # NEW
-import asyncio, logging, os
+from .utils import get_logger, get_keys 
 
-# ① ── create ../logs and file handler ───────────────────────────
-LOG_DIR = Path(__file__).parent / "logs"           # .../backend/logs
-LOG_DIR.mkdir(exist_ok=True)
-file_handler = logging.FileHandler(
-    LOG_DIR / "backend.log", mode="w", encoding="utf-8" 
-)
-file_handler.setFormatter(
-    logging.Formatter("%(asctime)s | %(levelname)-7s | %(name)s: %(message)s",
-                      datefmt="%H:%M:%S")
-)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)-7s | %(name)s → %(message)s",
-    datefmt="%H:%M:%S",
-    handlers=[logging.StreamHandler(), file_handler],   # ← add
-)
-log = logging.getLogger("backend.main")
-
-# load keys from .env file
-load_dotenv()
-OPENAI_KEY = os.getenv("OPENAI_API_KEY")
-TAVILY_KEY = os.getenv("TAVILY_API_KEY")
-if not OPENAI_KEY or not TAVILY_KEY:
-    raise RuntimeError("Set OPENAI_API_KEY and TAVILY_API_KEY in .env")
+# set up logging
+log = get_logger("backend.main")
 
 # initialize the Tavily OpenAI clients 
+OPENAI_KEY, TAVILY_KEY = get_keys()
 tavily  = TavilyClient(TAVILY_KEY)
 llm     = AsyncOpenAI(api_key=OPENAI_KEY)
 
@@ -95,6 +69,8 @@ async def main() -> None:
     if not problem:
         print("No input, exiting.")
         return
+    
+    log.info("\n\nUser problem: %s\n", problem)
 
     # init the state
     init_state: State = {
@@ -107,6 +83,8 @@ async def main() -> None:
     final_state: State = await graph.ainvoke(init_state, config={"recursion_limit": 20}) 
 
     log.info("Successfully executed the workflow :)")
+
+
 # run main
 if __name__ == "__main__":
     try:

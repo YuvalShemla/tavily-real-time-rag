@@ -5,4 +5,5 @@ openai
 python-dotenv
 pydantic
 typing_extensions
-numpy          
+numpy
+streamlit          
