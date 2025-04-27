@@ -45,7 +45,7 @@ tavily_dynamic_rag/
 │   ├── __init__.py
 │   ├── base_node.py
 │   ├── llm_configs.py
-│   ├── main.py
+│   ├── main.py              ← entrypoint for LangGraph pipeline
 │   ├── state.py
 │   ├── utils.py
 │   ├── logs/
@@ -62,10 +62,10 @@ tavily_dynamic_rag/
 │       ├── filter.py
 │       └── responder.py
 ├── results/
-│       ├── example_1.py
-│       ├── example_2.py
-│       ├── example_3.py
-│       ├── example_rec.mp4
+│   ├── example_1.py
+│   ├── example_2.py
+│   ├── example_3.py
+│   └── example_rec.mp4
 ├── requirements.txt
 └── README.md
 
