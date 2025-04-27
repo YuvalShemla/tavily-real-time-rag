@@ -31,14 +31,15 @@ class _CRaw(BaseModel):
 class CrawlNode(BaseNode):
     endpoint = "https://api.tavily.com/crawl"
     timeout  = 150                        # seconds
-    # TODO change to better params
+
     # Default crawl parameters ------------------------------------------------
     _payload: Dict[str, Any] = dict(
-        limit         = 300,
-        max_depth     = 2,
+        limit         = 500,
+        max_depth     = 3,
         max_breadth   = 100,
         extract_depth = "advanced",
         allow_external= False,
+        # query = "code"
         select_paths  = [
             r"/.*\.ipynb$", r"/.*\.py$", r"/.*\.(js|ts|tsx)$",
             r"/.*\.(cpp|c|cc|h|hpp)$", r"/.*\.(go|rs)$", r"/.*\.java$",

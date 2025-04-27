@@ -20,48 +20,26 @@ class CrawlDoc(TypedDict):
     url: str
     content: str
 
-
 class RawDoc(TypedDict):
     url: str
     content: str
-
+    signature_text: NotRequired[str]             # e.g. "fmt io math os"
+    signature_words: NotRequired[List[str]]      # e.g. ["fmt","io","math","os"]
+    embedding: NotRequired[List[float]]          # the vector you sent/received
+    similarity_score: NotRequired[float | None]  # cosine vs. draft
 
 class InitialCode(TypedDict):
     content: str
     chunk_ids: List[str] | None
-
+    signature_text: NotRequired[str]             # draft’s import-signature
+    signature_words: NotRequired[List[str]]      # list of draft’s modules
+    embedding: NotRequired[List[float]]          # draft’s embedding vector
 
 class FinalCode(TypedDict):
     content: str
     sources: List[str] | None
     reflection: str | None
 
-
-# ───────────────────── chunk-level structures ──────────────────── #
-
-class RawChunk(TypedDict):
-    """One 256-token chunk extracted from a GitHub file."""
-    id:        str            # 8-char UUID
-    url:       str            # original blob URL
-    content:   str            # chunk text
-    embedding: List[float]    # L2-normalised vector
-
-
-class CodeChunk(TypedDict):
-    """One 256-token chunk from the draft code."""
-    id:        str
-    url:       NotRequired[str | None]   # None for in-memory draft
-    content:   str
-    embedding: List[float]
-
-
-# ─────────────────── similarity-ranking structure ───────────────── #
-
-class ChunkMatch(TypedDict):
-    """A raw chunk ranked as similar to a particular draft-code chunk."""
-    url:     str
-    content: str
-    score:   float            # cosine similarity (0 → 1)
 
 
 # ───────────────────────────── state ───────────────────────────── #
@@ -83,11 +61,6 @@ class State(TypedDict):
     # code generation
     initial_code:  NotRequired[InitialCode]
     final_content: NotRequired[FinalCode]
-
-    # embeddings & similarity
-    raw_chunks:   NotRequired[List[RawChunk]]
-    code_chunks:  NotRequired[List[CodeChunk]]
-    chunk_matches: NotRequired[Dict[str, List[ChunkMatch]]]   # key = code-chunk id
 
     # workflow meta
     status: str

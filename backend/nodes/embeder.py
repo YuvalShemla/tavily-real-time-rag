@@ -1,74 +1,93 @@
-"""
-EmbederNode (OpenAI)
-• Splits each file into ~1 500-char chunks (300-char overlap)
-• Calls OpenAI text-embedding-3-small in batches
-• Stores raw_chunks / code_chunks with ready-to-use vectors
-"""
+"""embed_signature_node
+~~~~~~~~~~~~~~~~~~~~~~~
+A radically simplified version of the former *EmbederNode*.
 
+* Drops all language‑specific parsing – **no regex, no import harvesting**.
+* The *signature* for every text (draft or raw doc) is just the **first
+  `MAX_CHARS` characters** of the file.
+* Embeds the signatures with **`text-embedding-3-small`**.
+* Computes cosine similarity between the draft vector and every raw‑doc vector.
+* Mutates `state["raw_docs"]` and `state["initial_code"]` in‑place.
+
+Public API remains identical, so you can swap the file and rerun your pipeline.
+"""
 from __future__ import annotations
-import asyncio, logging, uuid
-from typing import Any, Dict, List, Sequence
 
+import logging
+from typing import Any, Dict, List
+
+import numpy as np
 from openai import AsyncOpenAI
+
 from ..base_node import BaseNode
-from ..state     import RawDoc, InitialCode
+from ..state import InitialCode, RawDoc
 
-_log = logging.getLogger("nodes.embed_oa")
+_LOG = logging.getLogger("nodes.embed_signature")
+_MODEL = "text-embedding-3-small"
 
+# ---------------------------------------------------------------------------
+#                         configuration constants
+# ---------------------------------------------------------------------------
+MAX_CHARS = 10_000        # char slice per document → ~8 k tokens max
 
+def _signature(text: str) -> str:
+    """Return the leading slice that goes to the embedder."""
+    return text[:MAX_CHARS]
+
+# ---------------------------------------------------------------------------
+#                                main node
+# ---------------------------------------------------------------------------
 class EmbederNode(BaseNode):
-    CHUNK_CHARS   = 1_500
-    OVERLAP_CHARS = 300
-    BATCH_SIZE    = 96               # ≤ 8191 tokens combined per request
-    MODEL         = "text-embedding-3-small"
+    """One‑shot signature embedder using a fixed char‑slice."""
 
-    def __init__(self, client: AsyncOpenAI):
-        super().__init__("embed")
-        self.client = client
+    def __init__(self, client: AsyncOpenAI) -> None:  # noqa: D401
+        super().__init__("embed_signature")
+        self._client = client
 
-    # ── helpers ──────────────────────────────────────────────────── #
-    def _split(self, text: str, url: str | None) -> List[Dict[str, Any]]:
-        step = self.CHUNK_CHARS - self.OVERLAP_CHARS
-        out  = []
-        for i in range(0, len(text), step):
-            chunk = text[i : i + self.CHUNK_CHARS]
-            out.append(
-                dict(
-                    id      = uuid.uuid4().hex[:8],
-                    url     = url,
-                    content = chunk,
-                    embedding = None,
-                )
-            )
-            if i + self.CHUNK_CHARS >= len(text):
-                break
-        return out
+    # ---------------------------------------------------------------------
+    #                           pipeline entry point
+    # ---------------------------------------------------------------------
+    async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:  # noqa: WPS110
+        raw_docs: List[RawDoc] = list(state.get("raw_docs", []))
+        draft: InitialCode | None = state.get("initial_code")
 
-    async def _embed_batch(self, batch: Sequence[Dict[str, Any]]) -> None:
-        strings = [c["content"] for c in batch]
-        resp = await self.client.embeddings.create(
-            model=self.MODEL,
-            input=strings,
-        )
-        for c, item in zip(batch, resp.data):
-            c["embedding"] = item.embedding  # already list[float]
-
-    # ── graph step ───────────────────────────────────────────────── #
-    async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        raw_docs: List[RawDoc]        = state.get("raw_docs", [])
-        draft:     InitialCode | None = state.get("initial_code")
-
-        if not raw_docs and not draft:
-            _log.warning("OpenAI Embeder: nothing to embed.")
+        if not raw_docs and draft is None:
+            _LOG.warning("EmbederNode: nothing to embed – skipping.")
             return {}
 
-        raw_chunks  = [ch for doc in raw_docs for ch in self._split(doc["content"], doc["url"])]
-        code_chunks = self._split(draft["content"], None) if draft else []
+        # ---------------- collect signatures ------------------- #
+        signatures: List[str] = []
+        for doc in raw_docs:
+            sig = _signature(doc["content"])
+            doc["signature_text"] = sig
+            signatures.append(sig)
 
-        # batch in groups of ≤BATCH_SIZE
-        for i in range(0, len(raw_chunks + code_chunks), self.BATCH_SIZE):
-            chunk_slice = (raw_chunks + code_chunks)[i : i + self.BATCH_SIZE]
-            await self._embed_batch(chunk_slice)
+        if draft is not None:
+            draft_sig = _signature(draft["content"])
+            draft["signature_text"] = draft_sig
+            signatures.append(draft_sig)
+        else:
+            draft_sig = None
 
-        _log.info("OpenAI Embeder: %d raw + %d code chunks embedded.", len(raw_chunks), len(code_chunks))
-        return {"raw_chunks": raw_chunks, "code_chunks": code_chunks}
+        # ---------------- call embedding API ------------------- #
+        resp = await self._client.embeddings.create(model=_MODEL, input=signatures)
+        vectors = [item.embedding for item in resp.data]
+
+        if draft_sig is not None:
+            draft_vec = np.asarray(vectors.pop(), dtype=np.float32)
+            draft["embedding"] = draft_vec
+        else:
+            draft_vec = None
+
+        # ------------- cosine similarity & state update -------- #
+        for doc, vec in zip(raw_docs, vectors, strict=False):
+            arr = np.asarray(vec, dtype=np.float32)
+            doc["embedding"] = arr
+            if draft_vec is not None:
+                sim = float(np.dot(draft_vec, arr) / (np.linalg.norm(draft_vec) * np.linalg.norm(arr)))
+            else:
+                sim = None
+            doc["similarity_score"] = sim
+
+        _LOG.info("EmbederNode: embedded %d raw docs%s.", len(raw_docs), " + draft" if draft else "")
+        return {"raw_docs": raw_docs, "initial_code": draft}

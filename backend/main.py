@@ -13,7 +13,7 @@ from tavily import TavilyClient
 
 from .state  import State
 from .utils  import clip
-from .nodes  import PlannerNode, SearchNode, DrafterNode, FilterNode, CrawlNode, ExtractNode, EmbederNode
+from .nodes  import PlannerNode, SearchNode, DrafterNode, FilterNode, CrawlNode, ExtractNode, EmbederNode, RefinerNode
 
 # ───────────  logging  ───────────
 logging.basicConfig(
@@ -44,15 +44,17 @@ builder.add_node("filter",   FilterNode(llm))
 builder.add_node("crawl",    CrawlNode(TAVILY_KEY))
 builder.add_node("extract",   ExtractNode(tavily))
 builder.add_node("embeder", EmbederNode(llm))
+builder.add_node("refiner",  RefinerNode(llm))
 
 builder.set_entry_point("planner")
 builder.add_edge("planner", "search")
 builder.add_edge("planner", "drafter")
-builder.add_edge("search",  "filter")
-builder.add_edge("filter",  "crawl")
-builder.add_edge("crawl",  "extract")
-builder.add_edge("extract",  "embeder")
-builder.add_edge("embeder",    END)  
+builder.add_edge("search", "filter")
+builder.add_edge("filter", "crawl")
+builder.add_edge("crawl", "extract")
+builder.add_edge("extract", "embeder")
+builder.add_edge("embeder", "refiner")  
+builder.add_edge("refiner", END)  
 graph = builder.compile()
 log.info("✅  Graph compiled")
 
@@ -68,31 +70,52 @@ async def main() -> None:
         "status":   "new",
     }
 
-    final_state: State = await graph.ainvoke(init_state, config={"recursion_limit": 6})
+    final_state: State = await graph.ainvoke(init_state, config={"recursion_limit": 10})
 
     # print("\n🔎  Search results")
     # for i, d in enumerate(final_state.get("search_docs", []), 1):
     #     print(f"[{i:02}] {clip(d.get('title'))}  url: {d['url']}")
 
-    print("\n✅  Chosen URLs")
-    for url in final_state.get("crawl_urls", []):
-        print(f"url: {url}")
+    # print("\n✅  Chosen URLs")
+    # for url in final_state.get("crawl_urls", []):
+    #     print(f"url: {url}")
 
     # print("\n✅  Crawled results")
     # for i, d in enumerate(final_state.get("crawl_docs", []), 1):
     #     print(f"[{i:02}] {d.get('url')}  content: {clip(d['content'])}")
 
-    print("\n✅  Extract results")
-    for i, d in enumerate(final_state.get("raw_docs", []), 1):
-        print(f"[{i:02}] {d.get('url')}  raw_content: {clip(d['content'])}")
+    # print("\n✅  Extract results")
+    # for i, d in enumerate(final_state.get("raw_docs", []), 1):
+    #     print(f"[{i:02}] {d.get('url')}  raw_content: {clip(d['content'])}")
 
-    print("🧩  Raw chunks :", len(final_state.get("raw_chunks", [])))
-    print("🧩  Code chunks:", len(final_state.get("code_chunks",[])))
+    # Summaries
+    print(f"\n🔎  Search docs:   {len(final_state.get('search_docs', []))}")
+    print(f"🌐  Crawl docs:    {len(final_state.get('crawl_docs',  []))}")
+    print(f"✅  Extracted raw: {len(final_state.get('raw_docs',   []))}")
 
-    if final_state.get("raw_chunks") and final_state.get("code_chunks"):
-        print("✅  Embeddings generated for both raw and draft code.")
-    # print("\n💾 Draft code\n")
-    # print(final_state["initial_code"]["content"])
+    """Pretty-print the final code and an ordered list of raw docs by similarity."""
+    # 1️⃣  Final code (own block, easy to copy)
+    code = final_state["final_content"]["content"]
+    print("\n✅  Final Code:\n")
+    print(code)
+    print("\n" + "=" * 80 + "\n")
+
+    # 2️⃣  Raw docs sorted by similarity (highest → lowest)
+    raw_docs = [
+        d for d in final_state.get("raw_docs", [])
+        if d.get("similarity_score") is not None
+    ]
+    raw_docs.sort(key=lambda d: d["similarity_score"], reverse=True)
+
+    if not raw_docs:
+        print("No similarity-scored raw docs.")
+        return
+
+    print("🔗  Raw documents by similarity:\n")
+    for d in raw_docs:
+        print(f"{d['url']}: {d['similarity_score']:.4f}")
+
+
 
 if __name__ == "__main__":
     try:

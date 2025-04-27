@@ -6,6 +6,3 @@ python-dotenv
 pydantic
 typing_extensions
 numpy          
-tensorflow 
-transformers
-tf-keras

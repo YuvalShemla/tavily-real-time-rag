@@ -87,6 +87,16 @@ Rules
 """.strip(),
     )
 
+    REFINER = LLMParams(
+        model="gpt-4o",
+        temperature=0.15,
+        prompt=(
+            "You are a senior software engineer. Refactor or rewrite the draft so "
+            "it is correct, well-commented, and you may use information from the example code provided." 
+            "comment (with the example URL) above any block whose logic you borrow."
+            "It should be a stand alone, runnable code, with no TODOs or incomplete parts."
+        ),
+    )
 
     # Add others as you need:
     # SOLVER  = LLMParams(model="gpt-4o-mini", temperature=0.0, prompt=...)
