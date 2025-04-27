@@ -40,6 +40,7 @@ the workflow is implemented using LangGraph; each node owns a single job:
 
 ## Repository structure
 
+```text
 tavily_dynamic_rag/
 ├── backend/
 │   ├── __init__.py
@@ -68,7 +69,7 @@ tavily_dynamic_rag/
 │   └── example_rec.mp4
 ├── requirements.txt
 └── README.md
-
+```
 ---
 
 ## Quick start
