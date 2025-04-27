@@ -17,16 +17,16 @@ This repo is a template, and the goal was to make it adaptable to any domain. Th
 **How it works**  
 the workflow is implemented using LangGraph; each node owns a single job:
 
-| Phase      | Node      | What it does                                                             |
-|------------|-----------|--------------------------------------------------------------------------|
-| Planning   | Planner   | LLM drafts an outline and up-to-3 Tavily search queries                  |
-| Drafting   | Drafter   | First code attempt                                                      |
-| Search     | Search    | Tavily Search → candidate URLs                                          |
-| Crawl      | Crawler   | Tavily Crawl → raw pages/files                                          |
-| Extract    | Extract   | Converts GitHub `/blob/` → `raw` and grabs file text                    |
-| Ranking    | Ranker    | Embeds draft + files, computes cosine similarity                        |
-| Refining   | Refiner   | Rewrites draft using the top-K files as examples                        |
-| Responding | Responder | Shows result, asks user if they need more                               |
+| Node      | What it does                                                             |
+|-----------|--------------------------------------------------------------------------|
+| Planner   | LLM drafts an outline and up-to-3 Tavily search queries                  |
+| Drafter   | First code attempt                                                       |
+| Search    | Tavily Search → candidate URLs                                           |
+| Crawler   | Tavily Crawl → raw pages/files                                           |
+| Extract   | Converts GitHub `/blob/` → `raw` and grabs file text                     |
+| Ranker    | Embeds draft + files, computes cosine similarity                         |
+| Refiner   | Rewrites draft using the top-K files as examples                         |
+| Responder | Displays the result, collects user feedback, and decides whether to run another cycle or finish |
 
 *(Diagram here)*
 
@@ -43,5 +43,6 @@ the workflow is implemented using LangGraph; each node owns a single job:
 * **Prompts** – All prompt text lives in `llm_configs.py`. Tuning them (or switching models) has the biggest impact. Improtant to keep the JSON output formats intact.  
 * **Embeddings & Chunking** – Right now the embedding is one 8 k-char slice per file. For lbetter results: chunk + overlap + rank chunks. A local model like CodeBERT or other spesific embeders would be ideal, but on a local run on my (old) MacBook it was too slow.  
 * **Crawl parameters** – Current params are (`max_depth=3`, `max_breadth=100`, `limit=500`) are a compromise between speed and coverage for GitHub. Different domains will want different params.
+* **Multi-loop interaction** – The workflow already supports iterative refinement: after each answer, the user can ask follow-up questions and trigger another cycle. Currently, we only carry over the latest user prompt and the responder’s message. A next step would be to persist a compact history (e.g., outline snapshots, top sources, or key code diffs) so each loop has richer context without bloating the prompt.
 
 
