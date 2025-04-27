@@ -106,8 +106,12 @@ class ExtractNode(BaseNode):
             success += len(docs)
             failure += len(fails)
             for f in fails:
-                _log.warning("Extract failed: %s — %s", f.get("url"), f.get("error"))
+                _log.info("Extract failed: %s — %s", f.get("url"), f.get("error"))
 
-        # log and update state
+        # log results
         _log.info("ExtractNode: extracted %d/%d URLs successfully.", success, success + failure)
+        urls_txt = "\n".join(f" • {d['url']}" for d in raw_docs) 
+        _log.info("\n\n ----- ExtractNode files (%d total) -----\n%s", len(raw_docs), urls_txt)
+
+        # update state
         return {"raw_docs": raw_docs}

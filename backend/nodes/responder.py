@@ -105,10 +105,15 @@ class ResponderNode(BaseNode):
             _clean_state(state)
             bye_msg = AIMessage(content=self._default_goodbye)
             return {"status": "done", "messages": [bye_msg]}
+        
+        final_content = state.get("final_content", {}).get("content", "").strip()
+        code_snippet = final_content[:3000] + (" …" if len(final_content) > 3000 else "")
 
-        # prepare messege to LLM
+        # prepare message list for the follow-up LLM
         messages = [
             {"role": "system", "content": self.cfg.prompt},
+            {"role": "assistant",
+                "content": f"Here is the code that was previously produced:\n```python\n{code_snippet}\n```"},
             {"role": "user",   "content": user_input},
         ]
         resp = await self.llm.chat.completions.create(
@@ -133,6 +138,13 @@ class ResponderNode(BaseNode):
             "follow_up_response": raw_json,
             "messages": [AIMessage(content=raw_json)],
         }
+
+        _log.info(
+            "\n\n ----- Responder information ----- \n"
+            "Printed results to the user, LLM follow-up status=%s\nLLM response (first 300 chars): %s",
+            payload.status,
+            raw_json[:300] + (" …" if len(raw_json) > 300 else ""),
+        )
 
         # if we continue, add the problem to the state
         if payload.status == "continue":

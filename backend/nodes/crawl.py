@@ -95,7 +95,13 @@ class CrawlNode(BaseNode):
         nested = await asyncio.gather(*[self._crawl_one(u) for u in urls])
         docs: List[CrawlDoc] = [doc for sub in nested for doc in sub]
 
-        # log and update state
-        _log.info("CrawlerNode: gathered %d pages from %d base URLs",
-                  len(docs), len(urls))
+        # log results
+        pages_desc = "\n".join(
+            f" • {d['url']}"
+                for d in docs)
+        _log.info("\n\n CrawlerNode: gathered %d pages from %d base URLs",
+            len(docs), len(urls))
+        _log.info("\n ----- CrawlerNode pages (%d total) ------ \n%s", len(docs), pages_desc)
+ 
+        # update state
         return {"crawl_docs": docs}

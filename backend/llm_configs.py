@@ -91,9 +91,9 @@ Rules
         model="gpt-4o",
         temperature=0.15,
         prompt=(
-            "You are a senior software engineer. Refactor or rewrite the draft so "
-            "it is correct, well-commented, and you may use information from the example code provided." 
-            "comment (with the example URL) above any block whose logic you borrow."
+            "You are a world-class programmer. Your task is to refactor or rewrite the draft so "
+            "it is correct, well-commented, use relevent information from the example code provided." 
+            "comment the example URL above any block whose logic you borrow."
             "It should be a stand alone, runnable code, with no TODOs or incomplete parts."
         ),
     )
@@ -101,8 +101,10 @@ Rules
     FOLLOW_UP = LLMParams(
         prompt=(
             "You are an agent routing user requests.\n"
+            "you previously provide a code solution to the user prvious problem"
+            "Now the user asks for follow up question"
             "If the user expresses no additional need, reply with JSON:\n"
-            '{"status": "done", "goodbye": "<short farewell and goodluck>"}\n'
+            '{"status": "done", "goodbye": "<goodluck messege spesific to the problem>"}\n'
             "Else rewrite the follow-up into a concise programming problem:\n"
             '{"status": "continue", "problem": "<rewritten>"}'
             "Return **only** the JSON block below: no Markdown, no fences, no commentary."
@@ -110,6 +112,3 @@ Rules
         model="gpt-4o",
         temperature=0.2,
     )
-    # Add others as you need:
-    # SOLVER  = LLMParams(model="gpt-4o-mini", temperature=0.0, prompt=...)
-    # REVIEW  = ...

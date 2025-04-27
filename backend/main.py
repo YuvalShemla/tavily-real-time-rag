@@ -19,10 +19,25 @@ from .nodes  import (PlannerNode, SearchNode, DrafterNode, FilterNode, CrawlNode
                         ExtractNode, RankerNode, RefinerNode, ResponderNode)
 
 # logging
+# main.py  – excerpts only
+from pathlib import Path                           # NEW
+import asyncio, logging, os
+
+# ① ── create ../logs and file handler ───────────────────────────
+LOG_DIR = Path(__file__).parent / "logs"           # .../backend/logs
+LOG_DIR.mkdir(exist_ok=True)
+file_handler = logging.FileHandler(
+    LOG_DIR / "backend.log", mode="w", encoding="utf-8" 
+)
+file_handler.setFormatter(
+    logging.Formatter("%(asctime)s | %(levelname)-7s | %(name)s: %(message)s",
+                      datefmt="%H:%M:%S")
+)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-7s | %(name)s → %(message)s",
     datefmt="%H:%M:%S",
+    handlers=[logging.StreamHandler(), file_handler],   # ← add
 )
 log = logging.getLogger("backend.main")
 
@@ -91,6 +106,7 @@ async def main() -> None:
     # might need to make dynamic for additional loops
     final_state: State = await graph.ainvoke(init_state, config={"recursion_limit": 20}) 
 
+    log.info("Successfully executed the workflow :)")
 # run main
 if __name__ == "__main__":
     try:

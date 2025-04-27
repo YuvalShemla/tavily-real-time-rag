@@ -22,7 +22,7 @@ class _Code(BaseModel):
 
 # ---------- Drafter node ----------
 class DrafterNode(BaseNode):
-    
+
     # init node and log graph transitions
     def __init__(self, llm: AsyncOpenAI):
         super().__init__("drafter")
@@ -55,7 +55,11 @@ class DrafterNode(BaseNode):
         code_text = textwrap.dedent(resp.choices[0].message.content).strip()
         code = _Code(content=code_text)
 
-        # update state 
+        # log and update state 
+        _log.info("\n\n ----- Draft content: (500\%s chars) ----- \n%s\n",
+            len(code_text),
+            code_text[:500] + (" … " if len(code_text) > 500 else ""))
+        
         return {
             "initial_content": {"content": code.content, "chunk_ids": None},
             "messages":     [AIMessage(content=code.content)],

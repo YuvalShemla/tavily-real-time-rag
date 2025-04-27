@@ -63,7 +63,7 @@ class FilterNode(BaseNode):
             messages=messages,
         )
         raw_reply = resp.choices[0].message.content
-        _log.info("FilterNode raw reply: %s", raw_reply)
+        _log.info("\n\n ----- FilterNode raw reply ----- \n %s", raw_reply)
 
         # validate JSON
         try:

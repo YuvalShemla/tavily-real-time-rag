@@ -42,7 +42,6 @@ class SearchNode(BaseNode):
     # executes a single tavily search call
     async def _run_one(self, query: str) -> List[SearchDoc]:
 
-        _log.info("Tavily query: %s", query)
         try:
             raw: Dict[str, Any] = await asyncio.to_thread(
                 self.client.search,
@@ -78,6 +77,11 @@ class SearchNode(BaseNode):
         nested = await asyncio.gather(*[self._run_one(q) for q in queries])
         docs: List[SearchDoc] = [doc for sub in nested for doc in sub]
         
-        # log and update state
-        _log.info("SearchNode: gathered %d docs from %d queries", len(docs), len(queries))
+        # log results
+        search_txt = "\n".join(
+            f" • {d.get('title') or '(no title)'}: {d['url']}"
+            for d in docs)                            
+        _log.info("\n\n----- Tavily search results ----- (%d total):\n%s\n", len(docs), search_txt)
+    
+        # update state
         return {"search_docs": docs}
