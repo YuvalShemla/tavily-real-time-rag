@@ -1,11 +1,11 @@
-## Tavily Dynamic RAG
+## Tavily Real Time RAG
 
 **Motivation**  
 Large language models are great at producing text when the answer lies somewhere in their training data or is easily found online. The moment we need something new, niche, or buried deep in the web, they tend to fail.
 
 Traditional **Retrieval-Augmented Generation (RAG)** solves this by loading up a datastore of pre-indexed content, but that only works if we already collected the relevant data to any query the user might ask.
 
-**Dynamic RAG**
+**Real Time RAG**
 This implementation creates a live **search-and-crawl pipeline** for each query. With Tavily’s Search and Crawl APIs, dozens or even hundreds of fresh files are pulled in under a minute, and provide relevent context to the llm to refine its answers.
 This setup aims to achive: 
 
