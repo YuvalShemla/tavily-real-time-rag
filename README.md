@@ -16,7 +16,7 @@ The included example is a **coding dynamic RAG**: given a problem, it finds rele
 
 ---
 
-**Project Overview**  
+## Project Overview  
 the workflow is implemented using LangGraph; each node owns a single job:
 
 | Node      | What it does                                                             |
