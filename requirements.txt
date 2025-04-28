@@ -1,3 +1,4 @@
+# requirements.txt
 tavily-python
 langgraph
 langchain-core
@@ -6,4 +7,3 @@ python-dotenv
 pydantic
 typing_extensions
 numpy
-streamlit          

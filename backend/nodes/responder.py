@@ -106,9 +106,9 @@ def _clean_state(state: Dict[str, Any]) -> None:
 # ---------- Responder node -----------
 class ResponderNode(BaseNode):
     def __init__(self, llm: AsyncOpenAI):
-        super().__init__("follow_up")
+        super().__init__("responder")
         self.llm = llm
-        self.cfg = LLMConfig.FOLLOW_UP
+        self.cfg = LLMConfig.Responder
         self._default_goodbye = "Glad I could help — good luck!"
 
     # LangGraph entrypoint
@@ -145,9 +145,9 @@ class ResponderNode(BaseNode):
         try:
             payload = _Out.model_validate_json(raw_json)
         except (json.JSONDecodeError, ValidationError) as err:
-            _log.error("FollowUpNode: invalid JSON – %s", err)
+            _log.error("ResponderNode: invalid JSON - %s", err)
             _clean_state(state)
-            err_msg = AIMessage(content=f"[follow‑up error] {err}")
+            err_msg = AIMessage(content=f"[ResponderNode error] {err}")
             return {"status": "done", "messages": [err_msg]}
 
         # build the state update 
@@ -157,6 +157,7 @@ class ResponderNode(BaseNode):
             "messages": [AIMessage(content=raw_json)],
         }
 
+        # Both logs the messege and prints it to the consule
         _log.info(
             "\n\n ----- Responder loop information ----- \n"
             "Printed results to the user, LLM follow-up status=%s\n",

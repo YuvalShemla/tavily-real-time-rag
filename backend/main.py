@@ -20,8 +20,8 @@ from .utils import get_logger, get_keys
 
 # set up logging
 log = get_logger("backend.main")
-
 log.info("\n\n ---------- Starting New Workflow  ---------- \n")
+
 # initialize the Tavily OpenAI clients 
 OPENAI_KEY, TAVILY_KEY = get_keys()
 tavily  = TavilyClient(TAVILY_KEY)
@@ -66,7 +66,7 @@ log.info("Graph compiled")
 async def main() -> None:
 
     # prompt the user for a problem
-    problem = input("📝  Describe your problem:\n> ").strip()
+    problem = input("Describe your problem:\n> ").strip()
     if not problem:
         print("No input, exiting.")
         return

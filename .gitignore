@@ -1,48 +1,19 @@
 # .gitignore
 
-# ───── Python byte‑code / compiled files ─────
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 
-# ───── Virtual & conda environments ─────
+# venv & env
 .env
 .venv
 env/
 venv/
-ENV/
 
-# ───── Distribution / packaging artifacts ─────
-build/
-dist/
-*.egg-info/
-*.egg
-*.whl
-pip-wheel-metadata/
-MANIFEST
-
-# ───── PyInstaller build specs ─────
+# build specs
 *.spec
 *.manifest
 
-# ───── Streamlit configuration & secrets ─────
-.streamlit/config.toml
-.streamlit/secrets.toml
-
-# ───── Unit‑test / coverage outputs ─────
-.coverage*
-.pytest_cache/
-htmlcov/
-
-# ───── Static analysis / lint caches ─────
-.mypy_cache/
-.ruff_cache/
-
-# ───── Jupyter artefacts ─────
-.ipynb_checkpoints/
-
-# ───── Logs ─────
-*.log
-
-# ───── Local package storage (PEP‑582) ─────
+# package storage
 __pypackages__/

@@ -1,6 +1,13 @@
+""""
+    Helpers for the main application.
+    Configuring logging and loading API keys.
+"""
+
+
+# utils.py
+from dotenv import load_dotenv
 import logging, os
 from pathlib import Path
-from dotenv import load_dotenv
 
 # logging 
 LOG_DIR = Path(__file__).parent / "logs"

@@ -25,7 +25,7 @@ the workflow is implemented using LangGraph; each node owns a single job:
 | Drafter   | First code attempt                                                       |
 | Search    | Tavily Search → candidate URLs                                           |
 | Crawler   | Tavily Crawl → raw pages/files                                           |
-| Extract   | Converts GitHub `/blob/` → `raw` and extract file text                   |
+| Extract   | Converts GitHub `/blob/` → `raw` and extracts file text                   |
 | Ranker    | Embeds draft + files, computes cosine similarity                         |
 | Refiner   | Rewrites draft using the top-K files as examples                         |
 | Responder | Displays the result, collects user feedback, and decides whether to run another cycle or finish |
