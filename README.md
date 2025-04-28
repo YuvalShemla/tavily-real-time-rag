@@ -23,11 +23,11 @@ the workflow is implemented using LangGraph; each node owns a single job:
 |-----------|--------------------------------------------------------------------------|
 | Planner   | LLM drafts an outline and up-to-3 Tavily search queries                  |
 | Drafter   | First code attempt                                                       |
-| Search    | Tavily Search → candidate URLs                                           |
-| Crawler   | Tavily Crawl → raw pages/files                                           |
-| Extract   | Converts GitHub `/blob/` → `raw` and extracts file text                   |
-| Ranker    | Embeds draft + files, computes cosine similarity                         |
-| Refiner   | Rewrites draft using the top-K files as examples                         |
+| Search    | Tavily Search: collects candidate URLs                                   |
+| Crawler   | Tavily Crawl: based on candidate, collects neighboring URLS and their raw content               |
+| Extract   | Tavily Extract: Converts GitHub `/blob/` to `/raw/` and extracts content |
+| Ranker    | Embeds draft and files, then computes cosine similarity                  |
+| Refiner   | Rewrites draft using the most relevant files as examples                 |
 | Responder | Displays the result, collects user feedback, and decides whether to run another cycle or finish |
 
 ![Workflow diagram](./graph_diagram.png)
