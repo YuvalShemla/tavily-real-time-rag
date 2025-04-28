@@ -1,6 +1,6 @@
 """
     RankerNode embeds the first MAX_CHARS of a file with text-embedding-3-small
-    Computes cosine similarity between the draft vector and every raw‑doc vector.
+    Computes cosine similarity between the draft vector and every rawdoc vector.
     Updates ranking to state["raw_docs"] and state["initial_code"].
 """
 
@@ -36,10 +36,10 @@ class RankerNode(BaseNode):
         draft: InitialContent | None = state.get("initial_content")
 
         if not raw_docs and draft is None:
-            _LOG.warning("EmbederNode: nothing to embed – skipping.")
+            _LOG.warning("EmbederNode: nothing to embed - skipping.")
             return {}
 
-        # Collect signatures for raw docs and draft
+        # Collect signatures for raw docs and draft (improve logic for better results)
         def _signature(text: str) -> str:
             return text[:MAX_CHARS]
 

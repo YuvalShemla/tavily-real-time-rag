@@ -2,19 +2,18 @@
 TypedDict definitions for the LangGraph workflow state.
 """
 
+# state.py
 from typing import Annotated, List, Dict
 from typing_extensions import TypedDict, NotRequired
 from langgraph.graph.message import AnyMessage, add_messages
 
 
-# ───────────────────────── existing docs ───────────────────────── #
-
+# classes to store results from the nodes
 class SearchDoc(TypedDict):
     title:   str | None
     url:     str | None
     content: NotRequired[str | None]
     score:   float | None
-
 
 class CrawlDoc(TypedDict):
     url: str
@@ -23,17 +22,14 @@ class CrawlDoc(TypedDict):
 class RawDoc(TypedDict):
     url: str
     content: str
-    signature_text: NotRequired[str]             # e.g. "fmt io math os"
-    signature_words: NotRequired[List[str]]      # e.g. ["fmt","io","math","os"]
-    embedding: NotRequired[List[float]]          # the vector you sent/received
-    similarity_score: NotRequired[float | None]  # cosine vs. draft
+    signature_text: NotRequired[str]
+    embedding: NotRequired[List[float]]
+    similarity_score: NotRequired[float | None]
 
 class InitialContent(TypedDict):
     content: str
-    chunk_ids: List[str] | None
-    signature_text: NotRequired[str]             # draft’s import-signature
-    signature_words: NotRequired[List[str]]      # list of draft’s modules
-    embedding: NotRequired[List[float]]          # draft’s embedding vector
+    signature_text: NotRequired[str]
+    embedding: NotRequired[List[float]]
 
 class FinalCode(TypedDict):
     content: str
@@ -41,27 +37,25 @@ class FinalCode(TypedDict):
     reflection: str | None
 
 
-
-# ───────────────────────────── state ───────────────────────────── #
-
+# ----------- state ----------- 
 class State(TypedDict):
-    # LangGraph message buffer
+    # messages between nodes
     messages: Annotated[List[AnyMessage], add_messages]
 
-    # planning
+    # planner
     solution_outline: NotRequired[str]
     search_queries:   NotRequired[List[str]]
 
-    # web search & crawl
+    # tavily search & crawl & extract
     search_docs: NotRequired[List[SearchDoc]]
     crawl_urls:  NotRequired[List[str]]
     crawl_docs:  NotRequired[List[CrawlDoc]]
     raw_docs:    NotRequired[List[RawDoc]]
 
-    # code generation
+    # content generation
     initial_content:  NotRequired[InitialContent]
     final_content: NotRequired[FinalCode]
 
-    # workflow meta
-    follow_up_response: NotRequired[str]   # 
-    status:                str            # "new" | "continue" | "done"
+    # workflow 
+    follow_up_response: NotRequired[str]
+    status:                str
