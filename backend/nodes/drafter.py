@@ -55,11 +55,16 @@ class DrafterNode(BaseNode):
         code_text = textwrap.dedent(resp.choices[0].message.content).strip()
         code = _Code(content=code_text)
 
-        # log and update state 
-        _log.info("\n\n ----- Draft content: (500\%s chars) ----- \n%s\n",
+
+        # print and log results
+        print(f"\nDrafter: First 300 chars of draft: \n{code_text[:300]}" + (" …" if len(code_text) > 300 else ""))
+        _log.info(
+            "\n\n----- Draft content: (500/%d chars) -----\n%s",
             len(code_text),
-            code_text[:500] + (" … " if len(code_text) > 500 else ""))
+            code_text[:500] + (" …" if len(code_text) > 500 else ""),
+        )
         
+        # update state
         return {
             "initial_content": {"content": code.content, "chunk_ids": None},
             "messages":     [AIMessage(content=code.content)],

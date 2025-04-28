@@ -79,6 +79,7 @@ def _print_run_summary(state: Dict[str, Any]) -> None:
         lines.append("No similarity scored raw docs.")
 
     # print to console
+    print("\n------ Final Results ------")
     for line in lines:
         print(line)
 
@@ -118,7 +119,7 @@ class ResponderNode(BaseNode):
         _print_run_summary(state)
 
         # prompt user for follow ups 
-        user_input = input(" Anything else I can help with?\n> ").strip()
+        user_input = input("\nAnything else I can help with?\n> ").strip()
         if not user_input:
             _clean_state(state)
             bye_msg = AIMessage(content=self._default_goodbye)

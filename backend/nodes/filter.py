@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging, textwrap
 from string import Template
 from typing import Any, Dict, List
+import json
 
 from langchain_core.messages import AIMessage
 from pydantic import BaseModel, Field, ValidationError
@@ -16,6 +17,7 @@ from openai import AsyncOpenAI
 from ..base_node   import BaseNode
 from ..llm_configs import LLMConfig
 from ..state       import SearchDoc
+
 
 _log = logging.getLogger("backend.nodes.filter")
 
@@ -63,7 +65,20 @@ class FilterNode(BaseNode):
             messages=messages,
         )
         raw_reply = resp.choices[0].message.content
-        _log.info("\n\n ----- FilterNode raw reply ----- \n %s", raw_reply)
+        parsed_reply = json.loads(resp.choices[0].message.content)
+
+        # Extract the list of URLs
+        urls = parsed_reply.get("selected_urls", [])
+
+        # Print and log results
+        print("\nFilter: Base URLs for Crawl:")
+        for url in urls:
+            print(f"• {url}")
+
+        _log.info(
+            "\n\n----- FilterNode reply -----\n%s",
+            "\n".join(f"• {url}" for url in urls)
+        )
 
         # validate JSON
         try:

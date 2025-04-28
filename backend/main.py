@@ -83,7 +83,7 @@ async def main() -> None:
     # might need to make dynamic for additional loops
     final_state: State = await graph.ainvoke(init_state, config={"recursion_limit": 20}) 
 
-    log.info("Successfully executed the workflow :)")
+    log.info("Successfully executed the workflow :)\n\n")
 
 
 # run main

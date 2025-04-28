@@ -66,14 +66,23 @@ class PlannerNode(BaseNode):
 
         raw_json = textwrap.dedent(resp.choices[0].message.content).strip()
         parsed   = _Out.model_validate_json(raw_json)
+    
+        
+        # print results
+        print("\nPlanner:")
+        print(f"Outline:\n{parsed.solution_outline.strip()}\n")
+        print(f"Tavily queries ({len(parsed.search_queries)}):")
+        for query in parsed.search_queries:
+            print(f" • {query}")
 
         # log results
         _log.info(
-            "\n\n ----- Planner output ----- \nOutline:\n%s\nTavily queries:(%d)\n%s\n",
+            "\n\n----- Planner output -----\nOutline:\n%s\n\nTavily queries (%d):\n%s",
             parsed.solution_outline.strip(),
             len(parsed.search_queries),
             "\n".join(f" • {q}" for q in parsed.search_queries),
         )
+        
         # update state
         return {
             "solution_outline": parsed.solution_outline,

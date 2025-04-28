@@ -32,6 +32,7 @@ class LLMConfig:
                 STRICT RULES for each *search_queries* item  
                 • ≤ 12 words, no extra commentary or punctuation.   
                 • Queries must be distinct; each should target a different sub-task.
+                • create exactly 3 search queries, not more and not less. 
 
                 Return **only** the JSON block below: no Markdown, no fences, no commentary.
 

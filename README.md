@@ -17,6 +17,7 @@ The included example is a **coding dynamic RAG**: given a problem, it finds rele
 ---
 
 ## Project Overview  
+
 the workflow is implemented using LangGraph; each node owns a single job:
 
 | Node      | What it does                                                             |
@@ -25,7 +26,7 @@ the workflow is implemented using LangGraph; each node owns a single job:
 | Drafter   | First code attempt                                                       |
 | Search    | Tavily Search, collects candidate URLs                                   |
 | Crawler   | Tavily Crawl, based on candidate, collects neighboring URLS and their raw content               |
-| Extract   | Tavily Extract, converts GitHub `/blob/` to `/raw/` and extracts content |
+| Extract   | Converts GitHub `/blob/` to `/raw/` to extracts raw code content |
 | Ranker    | Embeds draft and files, then computes cosine similarity                  |
 | Refiner   | Rewrites draft using the most relevant files as examples                 |
 | Responder | Displays the result, collects user feedback, and decides whether to run another cycle or finish |
@@ -70,6 +71,10 @@ tavily_real_time_rag/
 │       ├── refiner.py
 │       ├── filter.py
 │       └── responder.py
+├── results/
+│   ├── rna_folding_demo.mp4
+│   ├── rna_folding.log
+│   ├── tavily_research_agent.log
 ├── graph_diagram.png
 ├── requirements.txt
 └── README.md

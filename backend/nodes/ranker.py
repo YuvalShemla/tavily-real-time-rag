@@ -77,15 +77,30 @@ class RankerNode(BaseNode):
                 sim = None
             doc["similarity_score"] = sim
 
-        # log results
-        _LOG.info("EmbederNode: embedded %d raw docs%s.", len(raw_docs), " + draft" if draft else "")
+        # prepare ranked list
         ranked = sorted(
             raw_docs,
             key=lambda d: (d["similarity_score"] is None,
-                            -d["similarity_score"] if d["similarity_score"] is not None else 0.0),
-            )
-        lines = "\n".join(f" • {d['similarity_score']:.4f} | {d['url']}"for d in ranked) 
-        _LOG.info("\n\n ----- EmbederNode ranking (%d results): ----- \n%s", len(ranked), lines)
+                        -d["similarity_score"] if d["similarity_score"] is not None else 0.0),
+        )
+        lines = "\n".join(f" • {d['similarity_score']:.4f} | {d['url']}" for d in ranked)
+
+        # print results
+        print(f"\nEmbederNode:\nEmbedded {len(raw_docs)} raw docs" + (" + draft" if draft else "") + ".")
+
+        print(f"\nEmbederNode ranking ({len(ranked)} results):\n{lines}")
+
+        # log results
+        _LOG.info(
+            "EmbederNode: embedded %d raw docs%s.",
+            len(raw_docs),
+            " + draft" if draft else "",
+        )
+        _LOG.info(
+            "\n\n----- EmbederNode ranking (%d results): -----\n%s",
+            len(ranked),
+            lines,
+        )
 
         # update state
         return {"raw_docs": raw_docs, "initial_content": draft}

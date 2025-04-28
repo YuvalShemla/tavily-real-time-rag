@@ -18,11 +18,11 @@ _log = logging.getLogger("backend.nodes.crawler")
 # single page result from Tavily Crawl
 class CrawlPage(BaseModel):
     url: str
-    raw_content: str | None = None        # full page text
+    raw_content: str | None = None
 
 # structure of the CrawlRaw response 
 class CrawlRaw(BaseModel):
-    results: List[CrawlPage]                  # << correct top-level key
+    results: List[CrawlPage]
     model_config = dict(extra="ignore")
 
 
@@ -92,16 +92,24 @@ class CrawlNode(BaseNode):
             return {}
 
         # run crawl requests in parallel
+        print("\nCrawlNode: crawling URLs (may take a moment)")
         nested = await asyncio.gather(*[self._crawl_one(u) for u in urls])
         docs: List[CrawlDoc] = [doc for sub in nested for doc in sub]
 
-        # log results
-        pages_desc = "\n".join(
-            f" • {d['url']}"
-                for d in docs)
-        _log.info("\n\n CrawlerNode: gathered %d pages from %d base URLs",
-            len(docs), len(urls))
-        _log.info("\n ----- CrawlerNode pages (%d total) ------ \n%s", len(docs), pages_desc)
+        # print and log results
+        pages_txt = "\n".join(f" • {d['url']}" for d in docs)
+
+        print(f"\nCrawlerNode:\nGathered {len(docs)} pages from {len(urls)} Base URLs.")
+        print(f"\nCrawlerNode pages ({len(docs)} total):\n{pages_txt}")
+
+        _log.info(
+            "CrawlerNode: gathered %d pages from %d URLs",
+            len(docs),
+            len(urls),
+        )
+        _log.info(
+            f"\n\n----- CrawlerNode pages ({len(docs)} total) -----\n{pages_txt}"
+        )
  
         # update state
         return {"crawl_docs": docs}

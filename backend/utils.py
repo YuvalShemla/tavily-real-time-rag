@@ -26,7 +26,7 @@ def _configure_logging() -> None:
         level=logging.INFO,
         format="%(asctime)s | %(levelname)-7s | %(name)s → %(message)s",
         datefmt="%H:%M:%S",
-        handlers=[logging.StreamHandler(), fh],
+        handlers=[fh],
     )
 
 def get_logger(name: str = "backend") -> logging.Logger:

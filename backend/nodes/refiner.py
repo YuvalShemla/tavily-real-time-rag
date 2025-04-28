@@ -99,9 +99,12 @@ class RefinerNode(BaseNode):
             raise
 
         # log and update state
+        print(f"\nRefiner: produced {len(refined.content)} chars of code.")
         _log.info("\n\n ------ Refiner output (500\%s chars) ----- \n%s",
                   len(refined.content),
                   refined.content[:500] + (" …" if len(refined.content) > 500 else ""))
+        
+        # update state
         return {
             "final_content": {
                 "content":    refined.content,

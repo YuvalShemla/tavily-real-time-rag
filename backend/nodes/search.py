@@ -80,8 +80,12 @@ class SearchNode(BaseNode):
         # log results
         search_txt = "\n".join(
             f" • {d.get('title') or '(no title)'}: {d['url']}"
-            for d in docs)                            
-        _log.info("\n\n----- Tavily search results ----- (%d total):\n%s\n", len(docs), search_txt)
+            for d in docs)
+                       
+        print(f"\nTavily search results ({len(docs)} total):\n{search_txt}\n")
+        _log.info(
+            f"\n\n----- Tavily search results ({len(docs)} total):\n{search_txt}\n"
+        )
     
         # update state
         return {"search_docs": docs}

@@ -66,10 +66,22 @@ class ExtractNode(BaseNode):
 
     # LangGraph entrypoint
     async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Extracts unique GitHub raw files from crawl and search results"""
+
+        # get crawl and search docs from state
         crawl_docs: List[CrawlDoc] = state.get("crawl_docs", [])
-        if not crawl_docs:
-            _log.warning("ExtractNode: no crawl_docs provided.")
-            return {}
+        search_docs_raw = state.get("search_docs", [])                                       # ← ADDED
+
+       # make sure search_docs is in the same {url, content} shape as CrawlDoc
+        search_docs: List[CrawlDoc] = [
+            {"url": d["url"], "content": d.get("content", "") or ""}
+            for d in search_docs_raw
+            if d.get("url")
+        ]                                                                                    # ← ADDED
+ 
+        # combine them
+        all_docs = search_docs + crawl_docs 
+
 
         # keep track of unique filenames and gathers raw URLs to extract
         seen: Set[str] = set()
@@ -77,7 +89,7 @@ class ExtractNode(BaseNode):
         todo: List[str] = []              
 
         # deduplicate by filename
-        for doc in crawl_docs:
+        for doc in all_docs:
             url, text = doc["url"], doc["content"]
             fname = filename(url)
             if not fname or fname in seen:
@@ -89,8 +101,14 @@ class ExtractNode(BaseNode):
             elif "/blob/" in url:
                 todo.append(blob_to_raw(url))
 
-        _log.info("ExtractNode: %d URLs already had content, %d queued for extract.",
-                  len(raw_docs), len(todo))
+        # print and log 
+        print(f"ExtractNode: {len(raw_docs)} URLs from crawl had raw code, {len(todo)} queued for extract.")
+
+        _log.info(
+            "ExtractNode: %d URLs already had content, %d queued for extract.",
+            len(raw_docs),
+            len(todo)
+        )
 
         # execute extract calls in parallel batches
         tasks = [
@@ -108,10 +126,20 @@ class ExtractNode(BaseNode):
             for f in fails:
                 _log.info("Extract failed: %s — %s", f.get("url"), f.get("error"))
 
-        # log results
-        _log.info("ExtractNode: extracted %d/%d URLs successfully.", success, success + failure)
-        urls_txt = "\n".join(f" • {d['url']}" for d in raw_docs) 
-        _log.info("\n\n ----- ExtractNode files (%d total) -----\n%s", len(raw_docs), urls_txt)
+        # print and log results
+        urls_txt = "\n".join(f" • {d['url']}" for d in raw_docs)
+        print(f"\nExtractNode: Extracted {success}/{success + failure} URLs successfully.")
+        print(f"\n----- ExtractNode files ({len(raw_docs)} total) -----\n{urls_txt}")
+        _log.info(
+            "ExtractNode: extracted %d/%d URLs successfully.",
+            success,
+            success + failure
+        )
+        _log.info(
+            "\n\n----- ExtractNode files (%d total) -----\n%s",
+            len(raw_docs),
+            urls_txt
+        )
 
         # update state
         return {"raw_docs": raw_docs}
