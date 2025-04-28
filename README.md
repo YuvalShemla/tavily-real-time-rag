@@ -70,7 +70,7 @@ tavily_real_time_rag/
 │       ├── refiner.py
 │       ├── filter.py
 │       └── responder.py
-├── diagram.png.txt
+├── graph_diagram.png
 ├── requirements.txt
 └── README.md
 ```
