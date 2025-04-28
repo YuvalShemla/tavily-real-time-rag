@@ -49,7 +49,7 @@ the workflow is implemented using LangGraph; each node owns a single job:
 ## Repository structure
 
 ```text
-tavily_dynamic_rag/
+tavily_real_time_rag/
 ├── backend/
 │   ├── __init__.py
 │   ├── base_node.py
