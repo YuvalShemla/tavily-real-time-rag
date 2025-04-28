@@ -3,7 +3,6 @@
     Configuring logging and loading API keys.
 """
 
-
 # utils.py
 from dotenv import load_dotenv
 import logging, os
