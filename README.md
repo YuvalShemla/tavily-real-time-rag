@@ -30,7 +30,7 @@ the workflow is implemented using LangGraph; each node owns a single job:
 | Refiner   | Rewrites draft using the top-K files as examples                         |
 | Responder | Displays the result, collects user feedback, and decides whether to run another cycle or finish |
 
-![Workflow diagram](./diagram.png)
+![Workflow diagram](./graph_diagram.png)
 
 **Note**
 * **Extract** is the only domain-specific node (GitHub). Swap it out for another spesific downloader or skip it entirely since in most cases the crawl already returns the relavent raw text.

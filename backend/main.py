@@ -65,6 +65,13 @@ log.info("Graph compiled")
 # main runs the entire workflow :D 
 async def main() -> None:
 
+    # prompt the user for a problem
+    problem = input("📝  Describe your problem:\n> ").strip()
+    if not problem:
+        print("No input, exiting.")
+        return
+    
+    log.info("\n\nUser problem: %s\n", problem)
 
     # init the state
     init_state: State = {
