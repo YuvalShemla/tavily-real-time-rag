@@ -64,6 +64,7 @@ log.info("Graph compiled")
 # main runs the entire workflow :D 
 async def main() -> None:
 
+    log.info("\n\n ---------- Starting New Workflow  ---------- \n")
     # prompt the user for a problem
     problem = input("📝  Describe your problem:\n> ").strip()
     if not problem:

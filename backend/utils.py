@@ -10,7 +10,7 @@ def _configure_logging() -> None:
     if logging.getLogger().handlers: 
         return
 
-    fh = logging.FileHandler(LOG_DIR / "backend.log", mode="w", encoding="utf-8")
+    fh = logging.FileHandler(LOG_DIR / "backend.log", mode="a", encoding="utf-8")
     fh.setFormatter(logging.Formatter(
         "%(asctime)s | %(levelname)-7s | %(name)s: %(message)s",
         datefmt="%H:%M:%S",
