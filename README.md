@@ -38,6 +38,11 @@ the workflow is implemented using LangGraph; each node owns a single job:
 
 ---
 
+## Results: 
+
+In the Results folder, there's an example run and two log files (the logs from the demo, and an additional seperate run). These outputs demonstrate what a single run looks like. An important note is that I trimmed the wait period in the video to make it easier to follow; as shown in the logs, the crawl step takes between one to two minutes. This is due to the parameter settings being on the heavier side, this is primarily because GitHub pages are busy with URLs. In other domains, a smaller page limit may suffice and require less time.
+
+
 ## Future Improvments
 
 * **Prompts** – All prompts for the LLMs are in `llm_configs.py`. Tuning them (or switching models) has the biggest impact. Improtant to keep the JSON output formats intact.  
