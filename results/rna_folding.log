@@ -1,54 +1,3 @@
-12:54:19 | INFO    | backend.main: 
-
- ---------- Starting New Workflow  ---------- 
-
-12:54:19 | INFO    | backend.main: Graph compiled
-12:55:03 | INFO    | backend.main: 
-
- ---------- Starting New Workflow  ---------- 
-
-12:55:03 | INFO    | backend.main: Graph compiled
-13:16:14 | INFO    | backend.main: 
-
- ---------- Starting New Workflow  ---------- 
-
-13:16:14 | INFO    | backend.main: Graph compiled
-13:16:28 | INFO    | backend.main: 
-
-User problem: Train a nerula network to predict the RNA secondary structure folding
-
-13:16:28 | INFO    | backend.base_node:  entering planner
-13:16:32 | INFO    | httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
-13:16:32 | INFO    | backend.nodes.planner: 
-
------ Planner output -----
-Outline:
-1. Collect RNA sequence and structure data. 2. Preprocess data for neural network input. 3. Design neural network architecture for sequence prediction. 4. Train the neural network with the dataset. 5. Evaluate model performance and adjust parameters. 6. Test the model on unseen RNA sequences.
-
-Tavily queries (3):
- • RNA sequence and structure dataset
- • preprocessing RNA data for neural networks
- • neural network architecture for sequence prediction
-13:16:32 | INFO    | backend.base_node:  leaving  planner
-13:16:32 | INFO    | backend.base_node:  entering drafter
-13:16:32 | INFO    | backend.base_node:  entering search
-13:17:13 | INFO    | backend.main: 
-
- ---------- Starting New Workflow  ---------- 
-
-13:17:13 | INFO    | backend.main: Graph compiled
-13:17:39 | INFO    | backend.main: 
-
- ---------- Starting New Workflow  ---------- 
-
-13:17:39 | INFO    | backend.main: Graph compiled
-13:18:45 | INFO    | backend.main: 
-
- ---------- Starting New Workflow  ---------- 
-
-13:18:45 | INFO    | backend.main: Graph compiled
-13:19:36 | INFO    | backend.main: 
-
  ---------- Starting New Workflow  ---------- 
 
 13:19:36 | INFO    | backend.main: Graph compiled
@@ -324,6 +273,7 @@ https://github.com/ml4bio/e2efold/blob/master/environment.yml: 0.3827
 https://github.com/mxfold/mxfold2/blob/master/build.py: 0.2618
 13:22:34 | INFO    | httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 13:22:34 | INFO    | backend.nodes.follow_up: 
+
 
  ----- Responder loop information ----- 
 Printed results to the user, LLM follow-up status=done
