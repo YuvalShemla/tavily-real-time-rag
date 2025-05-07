@@ -48,7 +48,7 @@ class CrawlNode(BaseNode):
         max_breadth   = 100,
         extract_depth = "advanced",
         allow_external= False,
-        # instructions = "collect all code files" (possibly better to use instructions over strict paths)
+        # instructions = "collect all code files" # might be better to use instructions over strict paths
         select_paths  = [
             r"/.*\.ipynb$", r"/.*\.py$", r"/.*\.(js|ts|tsx)$",
             r"/.*\.(cpp|c|cc|h|hpp)$", r"/.*\.(go|rs)$", r"/.*\.java$",
